@@ -22,6 +22,10 @@ class InvalidOperand(Exception):
     pass
 
 
+class NegativeSquareRootError(Exception):
+    pass
+
+
 def get_token_priority(token):
     if token == '(':
         return 0
@@ -81,9 +85,11 @@ def calculate(first_operand, second_operand, operator):
             raise DivisionByZeroError("Devision by zero.")
         return float(first_operand) / float(second_operand)
     elif operator == '^':
+        if float(second_operand) == 0.5 and float(first_operand) < 0:
+            raise NegativeSquareRootError("Cannot calculate square root of a negative number.")
         return float(first_operand) ** float(second_operand)
     else:
-        raise InvalidOperand("Invalid operand")
+        raise InvalidOperand("Invalid operand.")
 
 
 def calculate_postfix(token_list):
