@@ -66,8 +66,6 @@ def infix_to_postfix(expression):
             stack.push(token)
     while not stack.is_empty():
         list_postfix.append(stack.pop())
-    print()
-    print(list_postfix)
     return list_postfix
 
 
@@ -95,11 +93,20 @@ def calculate_postfix(token_list):
             stack.push(float(token))
         elif is_operator(token):
             if len(stack) < 2:
-                raise MissingOperandError("Missing operand for operator.")
-            second_operand = stack.pop()
-            first_operand = stack.pop()
-            result = calculate(first_operand, second_operand, token)
-            stack.push(result)
+                if len(stack) == 1 and (token == "-" or token == "+"):
+                    second_operand = stack.pop()
+                    first_operand = 1
+                    if token == '-':
+                        first_operand = -1
+                    result = calculate(first_operand, second_operand, "*")
+                    stack.push(result)
+                else:
+                    raise MissingOperandError("Missing operand for operator.")
+            else:
+                second_operand = stack.pop()
+                first_operand = stack.pop()
+                result = calculate(first_operand, second_operand, token)
+                stack.push(result)
         else:
             raise UnknownCharacterError("Expression contains unsupported character(s).")
 
@@ -112,4 +119,3 @@ def calculate_infix(expression):
     postfix_expression = infix_to_postfix(expression)
     result = calculate_postfix(postfix_expression)
     return result
-
