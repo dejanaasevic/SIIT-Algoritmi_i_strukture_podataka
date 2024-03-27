@@ -50,7 +50,6 @@ def infix_to_postfix(expression):
     list_postfix = []
     list_of_tokens = tokenize(expression)
     print(expression)
-    print(list_of_tokens)
     for token in list_of_tokens:
         if token.isdigit() or is_decimal(token):
             list_postfix.append(token)
@@ -67,7 +66,8 @@ def infix_to_postfix(expression):
             stack.push(token)
     while not stack.is_empty():
         list_postfix.append(stack.pop())
-
+    print()
+    print(list_postfix)
     return list_postfix
 
 
@@ -112,3 +112,4 @@ def calculate_infix(expression):
     postfix_expression = infix_to_postfix(expression)
     result = calculate_postfix(postfix_expression)
     return result
+

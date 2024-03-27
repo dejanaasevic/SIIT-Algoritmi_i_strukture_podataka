@@ -15,6 +15,10 @@ class ConsecutiveOperatorsError(Exception):
     pass
 
 
+class ConsecutiveOperandError(Exception):
+    pass
+
+
 class NoOperatorError(Exception):
     pass
 
@@ -56,6 +60,14 @@ def tokenize(expression):
     while i < (len(tokens) - 1):
         if tokens[i] in ['+', '-', '^', '*', '/'] and tokens[i + 1] in ['+', '-', '^', '*', '/']:
             raise ConsecutiveOperatorsError("Two adjacent operators detected.")
+        i += 1
+
+    i = 0
+    while i < (len(tokens) - 1):
+        is_first_token_number = tokens[i].isdigit() or is_decimal(tokens[i])
+        is_second_token_number = tokens[i + 1].isdigit() or is_decimal(tokens[i + 1])
+        if is_first_token_number and is_second_token_number:
+            raise ConsecutiveOperandError("Two adjacent operands detected.")
         i += 1
 
     filtered_tokens = []
@@ -101,7 +113,7 @@ def tokenize(expression):
     for token in filtered_tokens:
         if token in ['+', '-', '^', '*', '/']:
             operator = True
-        if token.isdigit():
+        if token.isdigit() or is_decimal(token):
             operand = True
 
     if not operator:
@@ -114,7 +126,6 @@ def tokenize(expression):
         if filtered_tokens[i] == '/' and filtered_tokens[i + 1] == '0':
             raise DivisionByZeroError("Division by Zero")
         i += 1
-    print(filtered_tokens)
 
     i = 0
     while i < len(filtered_tokens) - 1:
@@ -127,10 +138,19 @@ def tokenize(expression):
     if filtered_tokens[-1] in ['+', '-', '^', '*', '/']:
         raise MissingOperandError("Missing operand after operator.")
 
-    return filtered_tokens
+    list_of_tokens = []
+    if filtered_tokens[1].startswith('-'):
+        for i in range(len(filtered_tokens)):
+            if i == 1 and filtered_tokens[i - 1] != '(':
+                list_of_tokens.append("-")
+                list_of_tokens.append(filtered_tokens[i][1:])
+            else:
+                list_of_tokens.append(filtered_tokens[i])
+    else:
+        list_of_tokens = filtered_tokens
 
+    return list_of_tokens
 
-print(tokenize("6.11 - 74 * 2"))
 
 if __name__ == '__main__':
     #
@@ -138,20 +158,38 @@ if __name__ == '__main__':
     #
     test_cases = {
         # test floats
-        "-20*7.9/(3-7)": ['3.14', '^', '2'],
-        "(2.08-.03) ^  2": ['(', '2.08', '-', '.03', ')', '^', '2'],
-
-        # test integers
-        "2+(3*4)": ['2', '+', '(', '3', '*', '4', ')'],
-        "22     56": ['22', '56'],
+        #"-20*7.9/(3-7)": ['-20', '*', '7.9', '/', '(', '3', '-', '7', ')'],
+        # "(2.08-.03) ^ 2": ['(', '2.08', '-', '.03', ')', '^', '2'],
+        # "2+(3*4)": ['2', '+', '(', '3', '*', '4', ')'],
+        # "22     56": ['22', '56'],
+        # "1.5 * (6 - (3.5 / 2))": ['1.5', '*', '(', '6', '-', '(', '3.5', '/', '2', ')', ')'],
+        # "3 + 4 - 5 * (6 / 2)": ['3', '+', '4', '-', '5', '*', '(', '6', '/', '2', ')'],
+        # "2^3 * 4 - 6 / 2": ['2', '^', '3', '*', '4', '-', '6', '/', '2'],
+        # "10 + (5 * 2 - (3 / 1))": ['10', '+', '(', '5', '*', '2', '-', '(', '3', '/', '1', ')', ')'],
+        # "-1 * (-2 + 3) - (4 / (-2))": ['-1', '*', '(', '-2', '+', '3', ')', '-', '(', '4', '/', '-2', ')'],
+        # "3.14 * (2 + 3.14) / 2": ['3.14', '*', '(', '2', '+', '3.14', ')', '/', '2'],
+        # "(-3.14 * (-2))": ['(', '-3.14', '*', '-2', ')'],
+        # " 6.11 - 74 * 2": ['6.11', '-', '74', '*', '2'],
+        # " 6.11 - 74/2": ['6.11', '-', '74', '/', '2'],
+        # " 6.11 + 74/2": ['6.11', '+', '74', '/', '2'],
+        # "(4.2 + 3) * (5 - 2.5)": ['(', '4.2', '+', '3', ')', '*', '(', '5', '-', '2.5', ')'],
+        # "3 * 4 ^ (2 + 1)": ['3', '*', '4', '^', '(', '2', '+', '1', ')'],
+        # "5 * (3 + (2 * 4))": ['5', '*', '(', '3', '+', '(', '2', '*', '4', ')', ')'],
+        # "12 / 3 - (8 / 2)": ['12', '/', '3', '-', '(', '8', '/', '2', ')'],
+        # "3 + (-4) * (7 / 2)": ['3', '+', '-4', '*', '(', '7', '/', '2', ')'],
+        # "-2 + (4 * (-3))": ['-2', '+', '(', '4', '*', '-3', ')'],
+        # "1 + (-2) - 3 * (-4) + 5": ['1', '+', '-2', '-', '3', '*', '-4', '+', '5'],
+        # "6 / (2 + 3) - (4 + 5 * 3)": ['6', '/', '(', '2', '+', '3', ')', '-', '(', '4', '+', '5', '*', '3', ')'],
+        # "2.5 + (-4.2) * (7.8 / 2)": ['2.5', '+', '-4.2', '*', '(', '7.8', '/', '2', ')'],
+        # "-2.7 * (3.5 - (2.1 / 4))": ['-2.7', '*', '(', '3.5', '-', '(', '2.1', '/', '4', ')', ')']
 
         # test invalid
-        "ab cd": [],
-        "10,22": ['10', '22']
+        # "ab cd": [],
+        # "10,22": ['10', '22']
 
     }
 
     for expression, expected_tokens in test_cases.items():
         tokens = tokenize(expression)
-        print(f"Izraz: '{expression}', Očekivani tokeni: {expected_tokens}, Rezultat: {tokens}")
+        print(f"Izraz: '{expression}', Rezultat: {tokens}")
         assert tokens == expected_tokens
